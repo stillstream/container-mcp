@@ -65,7 +65,18 @@ API key 以 mode 0600 存在容器 runtime/control-plane-api-key；ID 在 runtim
 
 ## 部署到新的容器
 
-新容器需 Node.js >=22.19、npm、bash、curl、Git，以及官方 Secure MCP tunnel-client 二进制安装到 /usr/local/bin/tunnel-client-runtime-cloudflared。OpenCode Server 如需使用，应独立安装并由其自身管理；本仓库不会替新容器安装或启动 OpenCode。
+新容器需 Node.js >=22.19、npm、bash、curl、unzip、Git。当前官方 release 为 v0.0.18（Linux AMD64，官方 OpenAI 仓库）；在容器内安装 bundled-cloudflared 版本，客户端与 cloudflared companion 保持同目录：
+
+    cd /tmp
+    curl -fL -o tunnel-client.zip https://github.com/openai/tunnel-client/releases/download/v0.0.18/tunnel-client-runtime-cloudflared-v0.0.18-linux-amd64.zip
+    unzip -l tunnel-client.zip
+    mkdir -p /tmp/tunnel-client-unpack
+    unzip -q tunnel-client.zip -d /tmp/tunnel-client-unpack
+    install -m 0755 /tmp/tunnel-client-unpack/tunnel-client-runtime-cloudflared /usr/local/bin/tunnel-client-runtime-cloudflared
+    install -m 0755 /tmp/tunnel-client-unpack/cloudflared /usr/local/bin/cloudflared
+    /usr/local/bin/tunnel-client-runtime-cloudflared --help
+
+若压缩包实际文件名/目录布局有变化，先根据 unzip -l 输出按官方 release 内容调整安装源，不能把不匹配文件误装为客户端。OpenCode Server 如需使用，应独立安装并由其自身管理；本仓库不会替新容器安装或启动 OpenCode。
 
 在新容器内部克隆本仓库到 /opt/container-mcp（该路径应是容器自身文件系统，而非宿主机 bind mount），安装依赖：
 

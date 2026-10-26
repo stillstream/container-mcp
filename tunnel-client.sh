@@ -22,7 +22,7 @@ case "$1" in
   curl -fsS --max-time 3 http://127.0.0.1:18878/healthz >/dev/null || { echo 'container-mcp is not healthy' >&2; exit 2; }
   pid="$(read_pid)"; if test -n "$pid" && kill -0 "$pid" 2>/dev/null && is_ours "$pid"; then echo "already running pid=$pid"; exit 0; fi
   tunnel_id="$(cat "$ID_FILE")"; token="$(cat "$TOKEN_FILE")"; umask 077
-  nohup env CONTAINER_MCP_AUTH_HEADER="Bearer $token" "$CLIENT" run --control-plane.tunnel-id "$tunnel_id" --control-plane.api-key "file:$KEY_FILE" --mcp.server-url "url=$MCP_URL" --mcp.extra-headers 'Authorization: env:CONTAINER_MCP_AUTH_HEADER' --mcp.discovery-extra-headers 'Authorization: env:CONTAINER_MCP_AUTH_HEADER' --health.listen-addr "$HEALTH_ADDR" --log.level info >>"$LOG_FILE" 2>&1 </dev/null &
+  nohup env CONTAINER_MCP_AUTH_HEADER="Bearer $token" "$CLIENT" run --control-plane.tunnel-id "$tunnel_id" --control-plane.api-key "file:$KEY_FILE" --cloudflared.managed --mcp.server-url "url=$MCP_URL" --mcp.extra-headers 'Authorization: env:CONTAINER_MCP_AUTH_HEADER' --mcp.discovery-extra-headers 'Authorization: env:CONTAINER_MCP_AUTH_HEADER' --health.listen-addr "$HEALTH_ADDR" --log.level info >>"$LOG_FILE" 2>&1 </dev/null &
   pid=$!; echo "$pid" > "$PID_FILE"; chmod 600 "$PID_FILE"; unset token tunnel_id
   for n in $(seq 1 100); do if curl -fsS --max-time 1 "http://$HEALTH_ADDR/readyz" >/dev/null 2>&1; then echo "tunnel-client ready at $HEALTH_ADDR"; exit 0; fi; kill -0 "$pid" 2>/dev/null || break; sleep .2; done
   echo 'tunnel-client readiness failed; inspect logs (credentials are not printed)' >&2; exit 1 ;;
